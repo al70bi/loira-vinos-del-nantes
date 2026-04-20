@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vinos de Nantes — Valle del Loira</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green-deep: #1a3a1f;
+    --green-mid:  #2d5a3d;
+    --green-soft: #4a7c5e;
+    --green-pale: #e8f2ec;
+    --gold:       #c9a84c;
+    --gold-light: #f0e0a8;
+    --cream:      #faf7f0;
+    --stone:      #e8e2d5;
+    --ink:        #1c1a16;
+    --muted:      #6b6558;
+    --card-bg:    #ffffff;
+    --border:     rgba(45,90,61,0.15);
+    --shadow:     0 2px 20px rgba(26,58,31,0.08);
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body:    'DM Sans', system-ui, sans-serif;
+    --radius: 12px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── HERO ─────────────────────────────── */
+  .hero {
+    background: var(--green-deep);
+    color: #fff;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+    min-height: 340px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 80% at 80% 20%, rgba(201,168,76,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 10% 80%, rgba(74,124,94,0.2) 0%, transparent 50%),
+      linear-gradient(160deg, #0f2414 0%, #1a3a1f 40%, #2d5a3d 100%);
+  }
+  .hero-pattern {
+    position: absolute; inset: 0; opacity: 0.04;
+    background-image: repeating-linear-gradient(
+      45deg,
+      #fff 0px, #fff 1px,
+      transparent 1px, transparent 40px
+    );
+  }
+  .hero-content {
+    position: relative; z-index: 2;
+    padding: 3rem 2.5rem 2.5rem;
+    max-width: 900px;
+  }
+  .hero-eyebrow {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 32px; height: 1px;
+    background: var(--gold);
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 400;
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 1rem;
+  }
+  .hero h1 em { font-style: italic; color: var(--gold-light); }
+  .hero-sub {
+    font-size: 14px;
+    color: rgba(255,255,255,0.65);
+    max-width: 440px;
+    line-height: 1.7;
+    margin-bottom: 2rem;
+  }
+  .hero-stats {
+    display: flex; gap: 2rem; flex-wrap: wrap;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .hero-stat .val {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    color: var(--gold-light);
+    display: block;
+    line-height: 1;
+  }
+  .hero-stat .lbl {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── NAV ──────────────────────────────── */
+  .nav {
+    background: #fff;
+    border-bottom: 1px solid var(--stone);
+    position: sticky; top: 0; z-index: 100;
+    padding: 0 2rem;
+  }
+  .nav-inner {
+    max-width: 900px; margin: 0 auto;
+    display: flex; gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-inner::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    padding: 1rem 1.25rem;
+    border: none;
+    background: transparent;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-btn:hover { color: var(--green-mid); }
+  .nav-btn.active {
+    color: var(--green-deep);
+    font-weight: 500;
+    border-bottom-color: var(--green-mid);
+  }
+
+  /* ── LAYOUT ───────────────────────────── */
+  .main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  .section { display: none; }
+  .section.visible { display: block; }
+
+  /* ── SECTION HEADER ───────────────────── */
+  .sec-header {
+    margin-bottom: 2rem;
+  }
+  .sec-header h2 {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: var(--green-deep);
+    margin-bottom: 0.4rem;
+  }
+  .sec-header p {
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 520px;
+  }
+
+  /* ── CARDS ────────────────────────────── */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--stone);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .card h3 {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 400;
+    margin-bottom: 0.6rem;
+    color: var(--green-deep);
+  }
+  .card p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.75;
+  }
+
+  /* ── MAP SVG ──────────────────────────── */
+  .map-wrap {
+    background: #f0f7f3;
+    border: 1px solid var(--stone);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  .map-wrap h3 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--green-deep);
+  }
+
+  /* ── ZONE GRID ────────────────────────── */
+  .zone-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+  .zone-card {
+    background: var(--card-bg);
+    border: 1px solid var(--stone);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 4px solid transparent;
+  }
+  .zone-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+  .zone-card.sel { border-left-color: var(--green-mid); background: var(--green-pale); }
+  .zone-card .zname { font-size: 13px; font-weight: 500; margin-bottom: 3px; color: var(--ink); }
+  .zone-card .zha { font-size: 11px; color: var(--muted); }
+  .zdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+  .zone-info-box {
+    background: var(--green-pale);
+    border: 1px solid rgba(45,90,61,0.2);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.75;
+    margin-bottom: 1.5rem;
+  }
+  .zone-info-box strong { color: var(--green-deep); display: block; margin-bottom: 4px; font-size: 14px; }
+
+  /* ── SOIL MAP ─────────────────────────── */
+  .soil-legend {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    margin-top: 0.75rem;
+  }
+  .soil-item {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--muted);
+  }
+  .soil-dot { width: 13px; height: 13px; border-radius: 4px; flex-shrink: 0; }
+
+  /* ── WINE CARDS ───────────────────────── */
+  .wine-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px;
+    margin-bottom: 1.5rem;
+  }
+  .wine-card {
+    background: var(--card-bg);
+    border: 1px solid var(--stone);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .wine-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+  .wine-head {
+    padding: 1rem 1rem 0.75rem;
+    border-bottom: 1px solid var(--stone);
+  }
+  .badge {
+    display: inline-block;
+    font-size: 10px; font-weight: 500;
+    padding: 2px 9px;
+    border-radius: 20px;
+    margin-bottom: 6px;
+    letter-spacing: 0.03em;
+  }
+  .badge-b { background: #eaf4e0; color: #2e6010; }
+  .badge-r { background: #fdeaea; color: #8a1f1f; }
+  .badge-p { background: #fde8f2; color: #8a2050; }
+  .badge-s { background: #e4eefa; color: #1a4a8a; }
+
+  .wine-card .wtitle {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: var(--green-deep);
+  }
+  .wine-card .wapp { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .wine-body { padding: 10px 1rem 1rem; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .tag {
+    font-size: 10px;
+    background: var(--stone);
+    color: var(--muted);
+    padding: 2px 8px;
+    border-radius: 8px;
+  }
+  .wdesc { font-size: 12px; color: var(--muted); line-height: 1.65; margin-bottom: 10px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
+  .bar-lbl { font-size: 10px; color: var(--muted); min-width: 68px; }
+  .bar-bg { flex: 1; height: 3px; background: var(--stone); border-radius: 2px; }
+  .bar-fill { height: 3px; border-radius: 2px; background: var(--green-mid); transition: width 0.5s ease; }
+
+  /* ── CHARTS ───────────────────────────── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 560px) { .charts-grid { grid-template-columns: 1fr; } }
+  .chart-card {
+    background: var(--card-bg);
+    border: 1px solid var(--stone);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+  .chart-card h3 {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 1rem;
+  }
+
+  /* ── PAIRING ──────────────────────────── */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 0.75rem; }
+  .chip {
+    font-size: 12px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    background: var(--stone);
+    color: var(--muted);
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+
+  /* ── TEMP CARDS ───────────────────────── */
+  .temp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 1rem;
+  }
+  .temp-card {
+    background: var(--green-pale);
+    border: 1px solid rgba(45,90,61,0.15);
+    border-radius: 10px;
+    padding: 14px 12px;
+  }
+  .temp-val {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    color: var(--green-deep);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .temp-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* ── FOOTER ───────────────────────────── */
+  footer {
+    background: var(--green-deep);
+    color: rgba(255,255,255,0.45);
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 12px;
+    margin-top: 2rem;
+  }
+  footer a { color: var(--gold); text-decoration: none; }
+
+  /* ── RESPONSIVE ───────────────────────── */
+  @media (max-width: 600px) {
+    .hero-content { padding: 2rem 1.25rem 1.75rem; }
+    .hero-stats { gap: 1.25rem; }
+    .main { padding: 1.75rem 1rem 3rem; }
+    .nav { padding: 0 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-pattern"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Valle del Loira · Francia</div>
+    <h1>Vinos de <em>Nantes</em></h1>
+    <p class="hero-sub">La región vitivinícola más atlántica de Francia. Muscadet, Gros Plant y joyas naturales sobre suelos graníticos y esquistos milenarios.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="val">13.200</span><span class="lbl">hectáreas</span></div>
+      <div class="hero-stat"><span class="val">6</span><span class="lbl">appellations</span></div>
+      <div class="hero-stat"><span class="val">~400</span><span class="lbl">productores</span></div>
+      <div class="hero-stat"><span class="val">8+</span><span class="lbl">crus communaux</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="show('mapa',this)">Mapa y zonas</button>
+    <button class="nav-btn" onclick="show('vinos',this)">Los vinos</button>
+    <button class="nav-btn" onclick="show('datos',this)">Datos y gráficos</button>
+    <button class="nav-btn" onclick="show('guia',this)">Guía de maridaje</button>
+  </div>
+</nav>
+
+<main class="main">
+
+  <!-- ═══ MAPA ═══════════════════════════════════════ -->
+  <section id="sec-mapa" class="section visible">
+    <div class="sec-header">
+      <h2>Mapa de las appellations</h2>
+      <p>Las zonas de producción se articulan en torno al río Loire y sus afluentes, sobre suelos de origen volcánico y metamórfico.</p>
+    </div>
+
+    <div class="map-wrap">
+      <h3>Vista geográfica — región de Nantes</h3>
+      <svg width="100%" viewBox="0 0 640 300" role="img">
+        <title>Mapa esquemático appellations de Nantes, Valle del Loira</title>
+        <desc>Zonas Muscadet Sèvre et Maine, Coteaux de la Loire, Côtes de Grandlieu, Gros Plant y Fiefs Vendéens</desc>
+        <!-- Océano -->
+        <rect x="0" y="0" width="108" height="300" fill="#d4eaf7" opacity="0.5"/>
+        <text x="52" y="148" text-anchor="middle" font-size="11" fill="#2a6a9a" font-family="'DM Sans',sans-serif" opacity="0.7">Océano</text>
+        <text x="52" y="162" text-anchor="middle" font-size="11" fill="#2a6a9a" font-family="'DM Sans',sans-serif" opacity="0.7">Atlántico</text>
+        <!-- Loire -->
+        <path d="M620 42 Q540 62 455 80 Q370 98 290 115 Q210 130 155 142 Q130 148 108 155" stroke="#5aaad4" stroke-width="4.5" fill="none" opacity="0.55" stroke-linecap="round"/>
+        <text x="505" y="58" font-size="9" fill="#2a6a9a" font-family="'DM Sans',sans-serif" opacity="0.8">Río Loire</text>
+        <!-- Sèvre Nantaise -->
+        <path d="M368 200 Q345 178 320 158 Q295 140 268 126" stroke="#7ab8d8" stroke-width="2" fill="none" opacity="0.45" stroke-dasharray="4 3" stroke-linecap="round"/>
+        <text x="378" y="210" font-size="9" fill="#2a6a9a" font-family="'DM Sans',sans-serif" opacity="0.7">Sèvre Nantaise</text>
+        <!-- ZONA Sèvre et Maine -->
+        <ellipse cx="355" cy="205" rx="130" ry="68" fill="#4a7c5e" opacity="0.18"/>
+        <ellipse cx="355" cy="205" rx="130" ry="68" fill="none" stroke="#2d5a3d" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <text x="355" y="196" text-anchor="middle" font-size="12" font-weight="500" fill="#1a3a1f" font-family="'DM Sans',sans-serif">Muscadet</text>
+        <text x="355" y="211" text-anchor="middle" font-size="11" fill="#1a3a1f" font-family="'DM Sans',sans-serif">Sèvre et Maine</text>
+        <text x="355" y="225" text-anchor="middle" font-size="10" fill="#2d5a3d" font-family="'DM Sans',sans-serif" opacity="0.7">10.600 ha</text>
+        <!-- ZONA Coteaux de la Loire -->
+        <ellipse cx="500" cy="98" rx="92" ry="42" fill="#7db944" opacity="0.18"/>
+        <ellipse cx="500" cy="98" rx="92" ry="42" fill="none" stroke="#639922" stroke-width="1.4" stroke-dasharray="5 3"/>
+        <text x="500" y="92" text-anchor="middle" font-size="10" font-weight="500" fill="#27500A" font-family="'DM Sans',sans-serif">Coteaux de la Loire</text>
+        <text x="500" y="106" text-anchor="middle" font-size="9" fill="#27500A" font-family="'DM Sans',sans-serif">~400 ha</text>
+        <!-- ZONA Grandlieu -->
+        <ellipse cx="185" cy="218" rx="62" ry="46" fill="#95c45a" opacity="0.17"/>
+        <ellipse cx="185" cy="218" rx="62" ry="46" fill="none" stroke="#639922" stroke-width="1.2" stroke-dasharray="5 3"/>
+        <text x="185" y="213" text-anchor="middle" font-size="10" font-weight="500" fill="#27500A" font-family="'DM Sans',sans-serif">Côtes de</text>
+        <text x="185" y="226" text-anchor="middle" font-size="10" fill="#27500A" font-family="'DM Sans',sans-serif">Grandlieu</text>
+        <!-- ZONA Gros Plant -->
+        <ellipse cx="138" cy="172" rx="42" ry="28" fill="#c9a84c" opacity="0.18"/>
+        <ellipse cx="138" cy="172" rx="42" ry="28" fill="none" stroke="#a07830" stroke-width="1.1" stroke-dasharray="4 3"/>
+        <text x="138" y="169" text-anchor="middle" font-size="9" fill="#6b4a10" font-family="'DM Sans',sans-serif">Gros Plant</text>
+        <text x="138" y="181" text-anchor="middle" font-size="9" fill="#6b4a10" font-family="'DM Sans',sans-serif">Pays Nantais</text>
+        <!-- ZONA Fiefs Vendéens -->
+        <ellipse cx="235" cy="282" rx="52" ry="17" fill="#c9607a" opacity="0.15"/>
+        <ellipse cx="235" cy="282" rx="52" ry="17" fill="none" stroke="#a04060" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="235" y="286" text-anchor="middle" font-size="9" fill="#6a2040" font-family="'DM Sans',sans-serif">Fiefs Vendéens</text>
+        <!-- Nantes ciudad -->
+        <circle cx="163" cy="143" r="6" fill="#1a3a1f" opacity="0.8"/>
+        <text x="174" y="136" font-size="12" font-weight="500" fill="#1a3a1f" font-family="'DM Sans',sans-serif">Nantes</text>
+        <!-- Leyenda -->
+        <rect x="426" y="228" width="204" height="66" rx="8" fill="white" fill-opacity="0.9" stroke="#d0ccc0" stroke-width="0.5"/>
+        <circle cx="440" cy="244" r="5" fill="#4a7c5e" opacity="0.7"/>
+        <text x="450" y="248" font-size="10" fill="#6b6558" font-family="'DM Sans',sans-serif">Muscadet (varias sub-zonas)</text>
+        <circle cx="440" cy="262" r="5" fill="#c9a84c" opacity="0.7"/>
+        <text x="450" y="266" font-size="10" fill="#6b6558" font-family="'DM Sans',sans-serif">Gros Plant du Pays Nantais</text>
+        <circle cx="440" cy="280" r="5" fill="#c9607a" opacity="0.7"/>
+        <text x="450" y="284" font-size="10" fill="#6b6558" font-family="'DM Sans',sans-serif">Fiefs Vendéens</text>
+      </svg>
+    </div>
+
+    <p style="font-size:13px;color:var(--muted);margin-bottom:0.75rem;">Selecciona una subzona:</p>
+    <div class="zone-grid">
+      <div class="zone-card sel" onclick="selectZone(this,'Muscadet Sèvre et Maine','La mayor y más reputada appellation de Nantes, con 10.600 ha. Suelos de gneis, granito y micaesquisto. Produce Muscadet de gran complejidad, especialmente los vinos sur lie envejecidos 24, 36 o 60 meses según el cru. Communes de referencia: Clisson, Vallet, Le Pallet, Gorges.','#4a7c5e')">
+        <div class="zname"><span class="zdot" style="background:#4a7c5e"></span>Sèvre et Maine</div>
+        <div class="zha">10.600 ha · Granito / Gneis</div>
+      </div>
+      <div class="zone-card" onclick="selectZone(this,'Muscadet Coteaux de la Loire','Zona norte a lo largo del río Loire. Suelos de esquistos y gabro aportan acidez marcada y notas minerales. Producción pequeña (~400 ha). Los vinos tienen más cuerpo y envejecen bien, con potencial de guarda superior al Sèvre et Maine clásico.','#639922')">
+        <div class="zname"><span class="zdot" style="background:#639922"></span>Coteaux de la Loire</div>
+        <div class="zha">~400 ha · Esquisto / Gabro</div>
+      </div>
+      <div class="zone-card" onclick="selectZone(this,'Muscadet Côtes de Grandlieu','La appellation más joven (1994) y más atlántica. Suelos de ortogneis y granito rojo. Vinos más ligeros y frescos, perfectos para maridar con ostras y mariscos de proximidad. El lago de Grand-Lieu modera el microclima.','#7db944')">
+        <div class="zname"><span class="zdot" style="background:#7db944"></span>Côtes de Grandlieu</div>
+        <div class="zha">~450 ha · Ortogneis</div>
+      </div>
+      <div class="zone-card" onclick="selectZone(this,'Gros Plant du Pays Nantais','AOP producida con la uva Folle Blanche. Vino muy seco, ácido y mineral — perfecto con mariscos de la costa. Redescubierto por la tendencia de vinos naturales y bajos en alcohol. Producción reducida pero en crecimiento.','#c9a84c')">
+        <div class="zname"><span class="zdot" style="background:#c9a84c"></span>Gros Plant Nantais</div>
+        <div class="zha">~700 ha · Folle Blanche</div>
+      </div>
+      <div class="zone-card" onclick="selectZone(this,'Fiefs Vendéens','AOP desde 2011, al sur de Nantes. Produce blancos (Chenin Blanc), rosados y tintos (Gamay, Pinot Noir). Los rosados de Mareuil-sur-Lay son los más reconocidos. Influencia oceánica marcada. Vinos ligeros y fáciles de beber.','#c9607a')">
+        <div class="zname"><span class="zdot" style="background:#c9607a"></span>Fiefs Vendéens</div>
+        <div class="zha">~500 ha · Chenin / Gamay</div>
+      </div>
+    </div>
+
+    <div class="zone-info-box" id="zone-info">
+      <strong>Muscadet Sèvre et Maine</strong>
+      La mayor y más reputada appellation de Nantes, con 10.600 ha. Suelos de gneis, granito y micaesquisto. Produce Muscadet de gran complejidad, especialmente los vinos sur lie envejecidos 24, 36 o 60 meses según el cru. Communes de referencia: Clisson, Vallet, Le Pallet, Gorges.
+    </div>
+
+    <!-- MAPA SUELOS -->
+    <div class="map-wrap">
+      <h3>Tipos de suelo y su influencia en el vino</h3>
+      <svg width="100%" viewBox="0 0 640 175" role="img">
+        <title>Tipos de suelo predominantes en las appellations de Nantes</title>
+        <desc>Granito, Gneis, Esquisto y Gabro con su influencia en el carácter del vino</desc>
+        <!-- Granito -->
+        <rect x="20" y="30" width="138" height="100" rx="10" fill="#c8b888" opacity="0.35"/>
+        <rect x="20" y="30" width="138" height="100" rx="10" fill="none" stroke="#9a8a5a" stroke-width="1"/>
+        <circle cx="58" cy="55" r="3.5" fill="#9a8a5a" opacity="0.4"/>
+        <circle cx="92" cy="70" r="2.5" fill="#9a8a5a" opacity="0.4"/>
+        <circle cx="118" cy="52" r="4" fill="#9a8a5a" opacity="0.4"/>
+        <circle cx="78" cy="100" r="2.5" fill="#9a8a5a" opacity="0.4"/>
+        <circle cx="135" cy="108" r="3" fill="#9a8a5a" opacity="0.4"/>
+        <circle cx="48" cy="112" r="2" fill="#9a8a5a" opacity="0.4"/>
+        <text x="89" y="142" text-anchor="middle" font-size="12" font-weight="500" fill="#1c1a16" font-family="'DM Sans',sans-serif">Granito</text>
+        <text x="89" y="157" text-anchor="middle" font-size="10" fill="#6b6558" font-family="'DM Sans',sans-serif">Sèvre et Maine SW</text>
+        <!-- Gneis -->
+        <rect x="175" y="30" width="138" height="100" rx="10" fill="#b8a878" opacity="0.3"/>
+        <rect x="175" y="30" width="138" height="100" rx="10" fill="none" stroke="#888050" stroke-width="1"/>
+        <line x1="185" y1="58" x2="303" y2="58" stroke="#888050" stroke-width="0.8" opacity="0.5"/>
+        <line x1="185" y1="74" x2="303" y2="74" stroke="#888050" stroke-width="0.8" opacity="0.5"/>
+        <line x1="185" y1="90" x2="303" y2="90" stroke="#888050" stroke-width="0.8" opacity="0.5"/>
+        <line x1="185" y1="106" x2="303" y2="106" stroke="#888050" stroke-width="0.8" opacity="0.5"/>
+        <text x="244" y="142" text-anchor="middle" font-size="12" font-weight="500" fill="#1c1a16" font-family="'DM Sans',sans-serif">Gneis / Mica</text>
+        <text x="244" y="157" text-anchor="middle" font-size="10" fill="#6b6558" font-family="'DM Sans',sans-serif">Sèvre et Maine NE</text>
+        <!-- Esquisto -->
+        <rect x="330" y="30" width="138" height="100" rx="10" fill="#8aaa78" opacity="0.25"/>
+        <rect x="330" y="30" width="138" height="100" rx="10" fill="none" stroke="#5a7a48" stroke-width="1"/>
+        <line x1="340" y1="65" x2="458" y2="48" stroke="#5a7a48" stroke-width="0.8" opacity="0.5"/>
+        <line x1="340" y1="80" x2="458" y2="63" stroke="#5a7a48" stroke-width="0.8" opacity="0.5"/>
+        <line x1="340" y1="95" x2="458" y2="78" stroke="#5a7a48" stroke-width="0.8" opacity="0.5"/>
+        <line x1="340" y1="110" x2="458" y2="93" stroke="#5a7a48" stroke-width="0.8" opacity="0.5"/>
+        <text x="399" y="142" text-anchor="middle" font-size="12" font-weight="500" fill="#1c1a16" font-family="'DM Sans',sans-serif">Esquisto</text>
+        <text x="399" y="157" text-anchor="middle" font-size="10" fill="#6b6558" font-family="'DM Sans',sans-serif">Coteaux de la Loire</text>
+        <!-- Gabro -->
+        <rect x="485" y="30" width="138" height="100" rx="10" fill="#6a7a8a" opacity="0.22"/>
+        <rect x="485" y="30" width="138" height="100" rx="10" fill="none" stroke="#4a5a6a" stroke-width="1"/>
+        <circle cx="515" cy="62" r="5" fill="#4a5a6a" opacity="0.28"/>
+        <circle cx="548" cy="80" r="3.5" fill="#4a5a6a" opacity="0.28"/>
+        <circle cx="576" cy="55" r="6" fill="#4a5a6a" opacity="0.28"/>
+        <circle cx="528" cy="108" r="4" fill="#4a5a6a" opacity="0.28"/>
+        <circle cx="598" cy="100" r="3" fill="#4a5a6a" opacity="0.28"/>
+        <text x="554" y="142" text-anchor="middle" font-size="12" font-weight="500" fill="#1c1a16" font-family="'DM Sans',sans-serif">Gabro / Ortogneis</text>
+        <text x="554" y="157" text-anchor="middle" font-size="10" fill="#6b6558" font-family="'DM Sans',sans-serif">Grandlieu / Loire N.</text>
+      </svg>
+      <div class="soil-legend">
+        <div class="soil-item"><div class="soil-dot" style="background:#c8b888"></div>Granito — almendra, melocotón blanco, acidez viva</div>
+        <div class="soil-item"><div class="soil-dot" style="background:#b8a878"></div>Gneis/Mica — mineralidad compleja, potencial de guarda</div>
+        <div class="soil-item"><div class="soil-dot" style="background:#8aaa78"></div>Esquisto — acidez elevada, notas iodadas, vinos finos</div>
+        <div class="soil-item"><div class="soil-dot" style="background:#6a7a8a"></div>Gabro — textura redonda, mayor cuerpo y concentración</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ VINOS ════════════════════════════════════════ -->
+  <section id="sec-vinos" class="section">
+    <div class="sec-header">
+      <h2>Los vinos</h2>
+      <p>Desde el Muscadet más fresco hasta los Crus Communaux de larga crianza. La región ofrece una diversidad sorprendente basada en el terroir.</p>
+    </div>
+    <div class="wine-grid">
+      <div class="wine-card">
+        <div class="wine-head">
+          <div class="badge badge-b">Blanco seco</div>
+          <div class="wtitle">Muscadet Sur Lie</div>
+          <div class="wapp">Sèvre et Maine · Melon de Bourgogne</div>
+        </div>
+        <div class="wine-body">
+          <div class="tags"><span class="tag">11–12.5% alc.</span><span class="tag">8–10°C</span><span class="tag">1–3 años</span></div>
+          <div class="wdesc">El emblema de Nantes. Reposa sobre sus lías finas antes del embotellado. Notas de limón, manzana verde, almendra tostada y un característico perlage de gas natural. Vivo y sabroso.</div>
+          <div class="bar-row"><span class="bar-lbl">Mineralidad</span><div class="bar-bg"><div class="bar-fill" style="width:90%"></div></div></div>
+          <div class="bar-row"><span class="bar-lbl">Acidez</span><div class="bar-bg"><div class="bar-fill" style="width:85%"></div></div></div>
+          <div class="bar-row"><span class="bar-lbl">Cuerpo</span><div class="bar-bg"><div class="bar-fill" style="width:38%"></div></div></div>
+        </div>
+      </div>
+      <div class="wine-card">
+        <div class="wine-head">
+          <div class="badge badge-b">Blanco — Cru</div>
+          <div class="wtitle">Muscadet Cru Communaux</div>
+          <div class="wapp">Clisson · Gorges · Le Pallet · Goulaine</div>
+        </div>
+        <div class="wine-body">
+          <div class="tags"><span class="tag">12–13% alc.</span><span class="tag">10–13°C</span><span class="tag">5–15 años</span></div>
+          <div class="wdesc">Los grands crus del Muscadet. Crianza sur lie de 24 a 60 meses según el cru. Clisson (granito) da potencia; Gorges (gabro) ofrece textura y profundidad. Complejidad comparable a pequeños Borgoñas.</div>
+          <div class="bar-row"><span class="bar-lbl">Mineralidad</span><div class="bar-bg"><div class="bar-fill" style="width:95%"></div></div></div>
+          <div class="bar-row"><span class="bar-lbl">Acidez</span><div class="bar-bg"><div class="bar-fill" style="width:78%"></div></div></div>
+          <div class="bar-row"><span class="bar-lbl">Cuerpo</span><div class="bar-bg"><div class="bar-fill" style="width:65%"></div></div></div>
+        </div>
+      </div>
+      <div class="wine-card">
+        <div class="wine-head">
+          <div class="badge badge-b">Blanco muy seco</div>
+          <div class="wtitle">Gros Plant du Pays Nantais</div>
+          <div class="wapp">AOP · Folle Blanche</div>
+        </div>
+        <div class="wine-body">
+          <div class="tags"><span class="tag">9.5–11% alc.</span><span class="tag">7–9°C</span><span class="tag">Consumo joven</span></div>
+          <div class="wdesc">El vino más austero de la región. Alta acidez, bajo alcohol. Su sabor casi mordaz casa perfectamente con ostras y mariscos atlánticos. Redescubierto por los amantes de la vino natural y «vivant».</div>
+          <div class="bar-row"><span class="bar-lbl">Mineralidad</span><div class="bar-bg"><div class="bar-fill" style="width:72%"></div></div></div>
+          <div class="bar-row"><span class="bar-lbl">Acidez</span><div class="bar-bg"><div class="bar-fill" style="width:98%"></div></div></div>
+          <div class="bar-row"><span class="bar-lbl">Cuerpo</span><div class="bar-bg"><div class="bar-fill" style="width:20%"></div></div></div>
+        </div>
+      </div>
+      <div class="wine-card">
+        <div class="wine-head">
+          <div class="badge badge-p">Rosado / Tinto</div>
+          <div class="wtitle">Fiefs Vendéens</div>
+          <div class="wapp">AOP · Gamay · Pinot Noir · Chenin</div>
+        </div>
+        <div class="wine-body">
+          <div class="tags"><span class="tag">11–13% alc.</span><span class="tag">10–14°C</span><span class="tag">1–3 años</span></div>
+          <div class="wdesc">La faceta multicépage de Nantes. Los rosados de Mareuil-sur-Lay son los más reconocidos, ligeros y frutados. Los tintos de Gamay recuerdan a los Beaujolais. Blancos de Chenin frescos y directos.</div>
+          <div class="bar-row"><span class="bar-lbl">Frutalidad</span><div class="bar-bg"><div class="bar-fill" style="width:78%"></div></div></div>
+          <div class="bar-row"><span class="bar-lbl">Acidez</span><div class="bar-bg"><div class="bar-fill" style="width:62%"></div></div></div>
+          <div class="bar-row"><span class="bar-lbl">Cuerpo</span><div class="bar-bg"><div class="bar-fill" style="width:50%"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>La uva protagonista: Melon de Bourgogne</h3>
+      <p>Aunque originaria de Borgoña, el Melon de Bourgogne es hoy casi exclusivo del Valle del Loira. Sobrevivió al devastador invierno de 1709 cuando otras variedades perecieron. Su baja aromaticidad varietal hace del terroir el verdadero narrador del vino — razón por la que el tipo de suelo importa tanto aquí. En manos de los mejores productores, produce blancos de una mineralidad y longevidad sorprendentes.</p>
+    </div>
+
+    <div class="card">
+      <h3>El método sur lie</h3>
+      <p>Consiste en dejar el vino en contacto con sus lías (levaduras muertas) durante el invierno sin trasiego, hasta el embotellado que no puede producirse antes del tercer domingo de marzo posterior a la vendimia. Este contacto prolongado aporta cremosidad, complejidad y ese característico perlage (leve efervescencia) que define al Muscadet de calidad. Los Crus Communaux extienden este reposo hasta 24, 36 o 60 meses.</p>
+    </div>
+  </section>
+
+  <!-- ═══ DATOS ══════════════════════════════════════════ -->
+  <section id="sec-datos" class="section">
+    <div class="sec-header">
+      <h2>Datos y gráficos</h2>
+      <p>La región en números: superficie, producción, perfiles y precios.</p>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Superficie por appellation (%)</h3>
+        <div style="position:relative;height:230px">
+          <canvas id="chartPie" role="img" aria-label="Distribución de superficie por appellation en Nantes">Sèvre et Maine 80%, Gros Plant 5%, Grandlieu 3%, Coteaux Loire 3%, Fiefs Vendéens 5%, Otros 4%</canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Crecimiento Crus Communaux (M botellas)</h3>
+        <div style="position:relative;height:230px">
+          <canvas id="chartLine" role="img" aria-label="Evolución producción crus communaux 2011-2023">Crecimiento de 0.1M a 1.8M entre 2011 y 2023</canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Perfil organoléptico comparado</h3>
+        <div style="position:relative;height:230px">
+          <canvas id="chartRadar" role="img" aria-label="Radar comparativo Sur Lie vs Cru Communaux">Comparativa de perfiles</canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Precio medio por categoría (€)</h3>
+        <div style="position:relative;height:230px">
+          <canvas id="chartBar" role="img" aria-label="Precios medios en euros por categoría de vino">Básico 6€, Sur Lie 9€, Cru Gorges 22€, Cru Clisson 25€</canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Crus Communaux reconocidos</h3>
+      <p>Desde 2011 se han ido reconociendo 8 crus: <strong>Clisson</strong> (granito, vinos potentes y estructurados), <strong>Gorges</strong> (gabro, textura y salinidad), <strong>Le Pallet</strong> (gneis, elegancia), <strong>Monnières-Saint-Fiacre</strong> (micaesquisto), <strong>Château-Thébaud</strong>, <strong>Goulaine</strong>, <strong>Vallet</strong> y <strong>La Haye-Fouassière</strong>. Cada uno requiere un mínimo de crianza sur lie diferente y refleja el carácter único de su subsuelo.</p>
+    </div>
+
+    <div class="card">
+      <h3>Clima y cambio climático</h3>
+      <p>El clima oceánico templado (precipitaciones 650–750 mm/año, temperaturas moderadas por el Atlántico) ha preservado históricamente la acidez natural del Melon de Bourgogne. Sin embargo, el cambio climático está elevando gradualmente el grado alcohólico: los Muscadet clásicos rondan ya los 12–12.5°. Algunos productores retrasan la vendimia, buscan parcelas de orientación norte o trabajan con rendimientos más bajos para preservar el equilibrio acidez-alcohol que define el estilo de la región.</p>
+    </div>
+  </section>
+
+  <!-- ═══ GUÍA ═══════════════════════════════════════════ -->
+  <section id="sec-guia" class="section">
+    <div class="sec-header">
+      <h2>Guía de maridaje</h2>
+      <p>Los vinos de Nantes son ante todo vinos de mesa — diseñados para acompañar, no para lucirse solos. Su acidez y mineralidad los hacen versátiles.</p>
+    </div>
+
+    <div class="card">
+      <h3>Muscadet Sur Lie — la pareja del Atlántico</h3>
+      <p>La acidez corta la sal y la grasa de los mariscos con una limpieza que pocos vinos logran. Es el compañero clásico de la cocina costera de Bretaña y Pays de la Loire.</p>
+      <div class="chips">
+        <span class="chip">Ostras de la Bretaña</span>
+        <span class="chip">Mejillones marinière</span>
+        <span class="chip">Almejas al vapor</span>
+        <span class="chip">Boquerones en vinagre</span>
+        <span class="chip">Queso de cabra fresco</span>
+        <span class="chip">Sushi y sashimi</span>
+        <span class="chip">Gambas a la plancha</span>
+        <span class="chip">Ceviche</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Muscadet Cru Communaux — para platos con estructura</h3>
+      <p>Los crus, con su envejecimiento prolongado, desarrollan notas de frutos secos, mantequilla noisette y levadura. Soportan platos más complejos y son excelentes con bodega.</p>
+      <div class="chips">
+        <span class="chip">Bogavante a la mantequilla</span>
+        <span class="chip">Lenguado meunière</span>
+        <span class="chip">Vieiras salteadas</span>
+        <span class="chip">Risotto de trufa blanca</span>
+        <span class="chip">Comté 24 meses</span>
+        <span class="chip">Poularde a la crema</span>
+        <span class="chip">Foie gras terrina</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Gros Plant — el más osado</h3>
+      <p>Con su acidez extrema, funciona como palate cleanser perfecto y brilla únicamente con ingredientes muy salinos o yodados. No es para todos los paladares, pero quienes lo descubren no vuelven a imaginar las ostras sin él.</p>
+      <div class="chips">
+        <span class="chip">Ostras muy frías sin aderezo</span>
+        <span class="chip">Percebes</span>
+        <span class="chip">Anchoas en aceite</span>
+        <span class="chip">Navajas a la plancha</span>
+        <span class="chip">Berberechos con limón</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Fiefs Vendéens — versátiles y desenfadados</h3>
+      <p>Los rosados y tintos ligeros de Gamay se disfrutan con platos sencillos del día a día. Los blancos de Chenin funcionan sorprendentemente bien con cocina asiática.</p>
+      <div class="chips">
+        <span class="chip">Charcutería vendéenne</span>
+        <span class="chip">Ensaladas de verano</span>
+        <span class="chip">Pollo asado</span>
+        <span class="chip">Pizza blanca con trufa</span>
+        <span class="chip">Dim sum y dumplings</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Temperatura de servicio y copa</h3>
+      <div class="temp-grid">
+        <div class="temp-card">
+          <span class="temp-val">7–9°C</span>
+          <div class="temp-desc">Gros Plant, Muscadet joven. Copa tulipa pequeña para concentrar el aroma.</div>
+        </div>
+        <div class="temp-card">
+          <span class="temp-val">10–12°C</span>
+          <div class="temp-desc">Muscadet Sur Lie. Copa Chardonnay amplia. Permite abrirse con el oxígeno.</div>
+        </div>
+        <div class="temp-card">
+          <span class="temp-val">12–14°C</span>
+          <div class="temp-desc">Crus Communaux. Copa Borgoña grande. Sin decantación — el perlage es delicado.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>Vinos de Nantes — Valle del Loira · Datos orientativos con fines divulgativos · <a href="https://github.com/al70bi/loira-vinos-del-nantes" target="_blank">GitHub</a></p>
+</footer>
+
+<script>
+// ── NAVEGACIÓN ──────────────────────────────────────
+function show(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('visible');
+  btn.classList.add('active');
+  if (id === 'datos') setTimeout(initCharts, 60);
+}
+
+// ── ZONAS ───────────────────────────────────────────
+function selectZone(el, name, desc) {
+  document.querySelectorAll('.zone-card').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  const box = document.getElementById('zone-info');
+  box.innerHTML = '<strong>' + name + '</strong>' + desc;
+}
+
+// ── GRÁFICOS ─────────────────────────────────────────
+let chartsInited = false;
+function initCharts() {
+  if (chartsInited) return;
+  chartsInited = true;
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const txt   = isDark ? '#c2bfb2' : '#4a4540';
+  const grid  = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+
+  // PIE
+  new Chart(document.getElementById('chartPie'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Sèvre et Maine','Gros Plant','Grandlieu','Coteaux Loire','Fiefs Vendéens','Otros'],
+      datasets: [{
+        data: [80, 5, 3, 3, 5, 4],
+        backgroundColor: ['#2d5a3d','#c9a84c','#7db944','#97C459','#c9607a','#8a8a7a'],
+        borderWidth: 2,
+        borderColor: isDark ? '#1c1a16' : '#faf7f0'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { color: txt, font: { size: 10, family: "'DM Sans',sans-serif" }, boxWidth: 10, padding: 8 } } }
+    }
+  });
+
+  // LINE
+  new Chart(document.getElementById('chartLine'), {
+    type: 'line',
+    data: {
+      labels: ['2011','2013','2015','2017','2019','2021','2023'],
+      datasets: [{
+        label: 'Crus Communaux',
+        data: [0.1, 0.3, 0.6, 0.9, 1.2, 1.5, 1.8],
+        borderColor: '#2d5a3d',
+        backgroundColor: 'rgba(45,90,61,0.1)',
+        fill: true, tension: 0.4,
+        pointRadius: 4, pointBackgroundColor: '#2d5a3d',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: txt, font: { size: 10 } }, grid: { color: grid } },
+        y: { ticks: { color: txt, font: { size: 10 } }, grid: { color: grid }, beginAtZero: true }
+      }
+    }
+  });
+
+  // RADAR
+  new Chart(document.getElementById('chartRadar'), {
+    type: 'radar',
+    data: {
+      labels: ['Mineralidad','Acidez','Cuerpo','Complejidad','Longitud'],
+      datasets: [
+        {
+          label: 'Sur Lie clásico',
+          data: [82, 85, 38, 60, 65],
+          borderColor: '#7db944', backgroundColor: 'rgba(125,185,68,0.12)',
+          pointBackgroundColor: '#7db944', borderWidth: 1.5, pointRadius: 3
+        },
+        {
+          label: 'Cru Communaux',
+          data: [95, 78, 65, 90, 92],
+          borderColor: '#2d5a3d', backgroundColor: 'rgba(45,90,61,0.12)',
+          borderDash: [5,3],
+          pointBackgroundColor: '#2d5a3d', borderWidth: 1.5, pointRadius: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { color: txt, font: { size: 10 }, boxWidth: 10, padding: 8 } } },
+      scales: {
+        r: {
+          ticks: { color: txt, font: { size: 9 }, backdropColor: 'transparent' },
+          pointLabels: { color: txt, font: { size: 10 } },
+          grid: { color: grid }, angleLines: { color: grid },
+          min: 0, max: 100
+        }
+      }
+    }
+  });
+
+  // BAR
+  new Chart(document.getElementById('chartBar'), {
+    type: 'bar',
+    data: {
+      labels: ['Básico','Sur Lie','Gros Plant','Fiefs V.','Cru Gorges','Cru Clisson'],
+      datasets: [{
+        label: 'Precio medio (€)',
+        data: [6, 9, 5, 8, 22, 25],
+        backgroundColor: ['#97C459','#4a7c5e','#c9a84c','#c9607a','#2d5a3d','#1a3a1f'],
+        borderRadius: 5,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ctx.raw + ' €' } }
+      },
+      scales: {
+        x: { ticks: { color: txt, font: { size: 9 }, autoSkip: false, maxRotation: 30 }, grid: { color: grid } },
+        y: { ticks: { color: txt, font: { size: 10 }, callback: v => v + '€' }, grid: { color: grid }, beginAtZero: true }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
